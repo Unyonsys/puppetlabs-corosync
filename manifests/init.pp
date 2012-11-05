@@ -74,7 +74,10 @@ class corosync(
   $force_online       = false,
   $check_standby      = false,
   $debug              = false,
-) {
+  $user_home          = $module_name::variables::user_home,
+  $user_id            = $module_name::variables::user_id,
+  $group_id           = $module_name::variables::group_id,
+) inherits corosync::variables {
 
   # Making it possible to provide data with parameterized class declarations or
   # Console.
@@ -160,7 +163,19 @@ class corosync(
     }
   }
 
-  package { [ 'corosync', 'pacemaker' ]: ensure => present }
+  user { $module_name::variables::user:
+    uid  => $user_id,
+    gid  => $group_id,
+    home => $user_home,
+  }
+  group { $module_name::variables::group:
+    gid => $group_id,
+  }
+
+  package { [ 'corosync', 'pacemaker' ]:
+    ensure  => present,
+    require => User[ $module_name::variables::user ],
+  }
 
   # Template uses:
   # - $unicast_addresses
